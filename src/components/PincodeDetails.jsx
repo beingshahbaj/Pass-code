@@ -2,28 +2,49 @@ import React, { useEffect, useState } from "react";
 
 function PincodeDetails({ data, pin }) {
   const [text, setText] = useState("");
-  console.log(data, data[0].message);
-  if (data[0].Status === "Error") {
-    return <h1>{data[0].Message}</h1>;
-  }
+  const [filteredData, setFilteredData] = useState([]);
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    if (data[0].Status === "Error") {
+      setFilteredData([]);
+    } else {
+      setFilteredData(data[0].PostOffice);
+    }
+  }, [data]);
 
   function filterdata(e) {
-    setText(e.target.value);
-    const newdata = data[0].PostOffice.filter((data) =>
-      data.name.include(text)
-    );
-    console.log(newdata);
+    const value = e.target.value;
+    if (value.length > 0) {
+      const filtered = data[0].PostOffice.filter((data) =>
+        data.Name.toLowerCase().includes(value.toLowerCase())
+      );
+      if (filtered.length === 0) {
+        setErr(true);
+        setText(value);
+
+        console.log(filtered.length);
+      } else {
+        console.log(filtered.length);
+        setFilteredData(filtered);
+        setText(value);
+        setErr(false);
+      }
+    } else {
+      setText(value);
+      setFilteredData(data[0].PostOffice);
+      return;
+    }
   }
 
   return (
     <div className="postoffice">
       <div>
-        {" "}
         <h2>Pincode Details: {"  " + pin}</h2>
         <h3>{data[0].Message}</h3>
       </div>
       <div className="inputbox">
-        <span class="material-symbols-outlined search">search</span>
+        <span className="material-symbols-outlined search">search</span>
         <input
           className="filter"
           type="text"
@@ -43,8 +64,11 @@ function PincodeDetails({ data, pin }) {
         }}
       >
         <div className="box">
-          {data[0].PostOffice.length > 0 &&
-            data[0].PostOffice.map((data, index) => (
+          {err ? (
+            <h1>Couldn’t find the postal data you’re looking for…</h1>
+          ) : (
+            filteredData.length > 0 &&
+            filteredData.map((data, index) => (
               <li className="item" key={index}>
                 <h3>{data.Name}</h3>
                 <p>
@@ -55,7 +79,7 @@ function PincodeDetails({ data, pin }) {
                   <span>Delivery Status:</span> {data.DeliveryStatus}
                 </p>
                 <p>
-                  <span> District:</span> {" " + data.District}
+                  <span> District:</span> {"  " + data.District}
                 </p>
                 <p>
                   <span>State: </span>
@@ -78,7 +102,8 @@ function PincodeDetails({ data, pin }) {
                   {"  " + data.Pincode}
                 </p>
               </li>
-            ))}
+            ))
+          )}
         </div>
       </ul>
     </div>
